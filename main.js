@@ -1,3 +1,5 @@
+// A wrapper for Google Sheets and Spreadsheet classes in Google Apps Script, enabling simplified data manipulation and CRUD operations. It allows developers to interact with Google Sheets more effectively by providing an easy-to-use API for data retrieval, insertion, updating, and filtering based on column headers.
+
 /**
  * GAS の Sheetクラスのラッパ
  *
