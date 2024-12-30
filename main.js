@@ -1,10 +1,3 @@
- // WARNING: This is not a drop in replacement solution and
-// it might not work for some edge cases. Test your code! 
-const flow =
-  funcs =>
-  (...args) =>
-    funcs.reduce((prev, fnc) => [fnc(...prev)], args)[0]
-
 /**
  * GAS の Sheetクラスのラッパ
  *
@@ -101,6 +94,7 @@ class Sheet {
    * @memberof Sheet
    */
   find(conditions = {}) {
+    const flow = funcs => (...args) => funcs.reduce((prev, fnc) => [fnc(...prev)], args)[0]
     return flow(Object.keys(conditions).map(k => s => s.filter(o => o[k] === conditions[k])))(
       this.all
     );
@@ -156,6 +150,7 @@ class Sheet {
    * @memberof Sheet
    */
   update(data, conditions) {
+    const flow = funcs => (...args) => funcs.reduce((prev, fnc) => [fnc(...prev)], args)[0]
     let updated = false;
     if (conditions) {
       flow(Object.keys(conditions).map(k => s => s.filter(o => o[k] === conditions[k])))(
@@ -173,9 +168,9 @@ class Sheet {
     return updated;
   }
 
-  upsert(data, conditions){
-    if(this.find(conditions).length > 0){
-      this.update(data,conditions)
+  upsert(data, conditions) {
+    if (this.find(conditions).length > 0) {
+      this.update(data, conditions)
     } else {
       this.insert(data)
     }
@@ -263,3 +258,7 @@ class Spreadsheet {
     return this;
   }
 }
+
+// グローバルスコープにエクスポート
+this.Sheet = Sheet;
+this.Spreadsheet = Spreadsheet;
