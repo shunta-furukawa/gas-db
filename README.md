@@ -59,7 +59,29 @@ Logger.log(data);
 
 ---
 
-### 2. CRUD Operations
+### 2. Using `from()` to Access Another Spreadsheet
+
+The `Spreadsheet().from(scriptId)` method allows you to connect to a different Google Spreadsheet by providing its script ID. This is particularly useful when you need to work with spreadsheets other than the active one.
+
+#### Example
+
+```javascript
+function accessAnotherSpreadsheet() {
+// Instantiate the Spreadsheet class and connect to another spreadsheet by ID
+const spreadsheet = new gasdb.Spreadsheet().from("ANOTHER_SPREADSHEET_ID");
+
+// Access the sheet "Stories" from the other spreadsheet
+const sheet = spreadsheet.at("Stories");
+
+// Retrieve data from the sheet
+const data = sheet.findAll();
+Logger.log(data);
+}
+```
+
+---
+
+### ３. CRUD Operations
 
 #### Search Data by Conditions
 Retrieve only the data that matches specific conditions.
