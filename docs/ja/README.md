@@ -1,113 +1,162 @@
-# gas-db
+# gas-db: Google Sheets Wrapper Library for Apps Script
 
-`gas-db` は Google Apps Script (GAS) を使って Google Sheets を簡単に操作するためのライブラリです。Google Sheets をデータベースのように扱い、CRUD 操作を直感的に実行できる API を提供します。
-
----
-
-## 特徴
-
-- Google Sheets をデータベースとして扱い、構造化されたデータ操作が可能。
-- カラム名をキーとしてデータを取得・操作。
-- データの条件付き検索やフィルタリングに対応。
-- 行の挿入、更新、削除が簡単に実行可能。
-- カラム名と列インデックスのマッピングを自動生成。
+`gas-db` は、Google Apps Script 用の Google Sheets 操作を簡素化するラッパーライブラリです。このライブラリは、シートデータの取得、検索、挿入、更新、削除といった CRUD 操作をシンプルなコードで実行できるように設計されています。
 
 ---
 
-## インストール
+## 機能概要
 
-1. このリポジトリをクローンします：
-   ```
-   git clone https://github.com/your-username/gas-db.git
-   cd gas-db
-   ```
-
-2. コードを Google Apps Script プロジェクトにコピーします：
-   - [GASエディタ](https://script.google.com/) を開きます。
-   - このリポジトリ内の `sheet.js` と `spreadsheet.js` を GAS プロジェクトにコピーします。
-
-3. **任意**: 外部ライブラリを使用する場合は、Webpack などのツールでコードをバンドルしてください。
+- シートデータを JSON ライクなオブジェクトとして取得・操作
+- 簡潔な API で CRUD 操作を実現
+- 複数のシートを簡単に操作可能
+- シート列名をキーとしてデータを操作
 
 ---
 
-## 使い方
+## セットアップ
 
-以下は `gas-db` を使用する簡単な例です：
+このライブラリは、すでに Apps Script ライブラリとして公開されています。以下の手順でプロジェクトに追加してください。
+
+1. **Apps Script プロジェクトを開く**  
+   Google Apps Script エディタを開き、プロジェクトを作成します。
+
+2. **ライブラリを追加する**  
+   メニューから「ライブラリ」を選択し、以下のスクリプト ID を入力してください。  
 
 ```
-import Spreadsheet from './spreadsheet'; // 必要に応じてパスを調整
+1-oNObQAV_UrShtdZWEy8FwqmjGpD0-kVxWw-VdZdg0Dmx4xPs9Jp0-5Z
+```
 
-// アクティブなスプレッドシートを取得
-const db = Spreadsheet.from();
 
-// シートを名前で取得
-const users = db.at('Users');
+3. **バージョンを選択する**  
+利用可能なバージョンから、最新バージョンを選択してください。
 
-// すべてのデータを取得
-const allUsers = users.findAll();
-Logger.log(allUsers);
+4. **保存をクリック**  
+これでライブラリがプロジェクトに追加され、利用可能になります。
 
-// 条件に基づいてデータをフィルタリング
-const admins = users.find({ role: 'admin' });
-Logger.log(admins);
+---
 
-// 新しいデータを挿入
-users.insert({ name: 'John Doe', role: 'user', age: 30 });
+## 使用例
 
-// 条件に一致するデータを更新
-users.update({ role: 'admin' }, { name: 'John Doe' });
+### 1. 基本操作
 
-// ヘッダ以外のすべての行を削除
-users.clear();
+#### Spreadsheet クラスのインスタンスを作成
+以下の例は、Google Sheets からシートを取得し、全データを取得するコードです。
+
+```javascript
+function getAllData() {
+// Spreadsheet クラスのインスタンス化
+const spreadsheet = new gasdb.Spreadsheet();
+
+// シート "Stories" を取得
+const sheet = spreadsheet.at("Stories");
+
+// シート全体のデータを取得
+const data = sheet.findAll();
+Logger.log(data);
+}
 ```
 
 ---
 
-## 貢献ガイドライン
+### 2. CRUD 操作
 
-このライブラリの改善に貢献いただけると嬉しいです！以下の手順に従ってください：
+#### 条件付きデータの検索
+条件に一致するデータのみを取得します。
 
-1. このリポジトリをフォークします。
-2. フォークしたリポジトリをローカルにクローンします：
-   ```
-   git clone https://github.com/your-username/gas-db.git
-   cd gas-db
-   ```
+```javascript
+function findData() {
+const spreadsheet = new gasdb.Spreadsheet();
+const sheet = spreadsheet.at("Stories");
 
-3. 新しいブランチを作成します：
-   ```
-   git checkout -b feature/your-feature-name
-   ```
+// 条件を指定してデータを検索
+const conditions = { Title: "Adventure" };
+const results = sheet.find(conditions);
+Logger.log(results);
+}
+```
 
-4. 必要な変更を加えます。
-5. 変更をコミットしてプッシュします：
-   ```
-   git add .
-   git commit -m "Add feature: your-feature-name"
-   git push origin feature/your-feature-name
-   ```
+#### データの挿入
+新しいデータをシートに追加します。
 
-6. プルリクエストを作成します。
+```javascript
+function insertData() {
+const spreadsheet = new gasdb.Spreadsheet();
+const sheet = spreadsheet.at("Stories");
+
+// データを挿入
+sheet.insert({ Title: "New Story", Author: "John Doe" });
+}
+```
+
+#### データの更新
+既存データを条件付きで更新します。
+
+```javascript
+function updateData() {
+const spreadsheet = new gasdb.Spreadsheet();
+const sheet = spreadsheet.at("Stories");
+
+// データを更新
+const newData = { Title: "Updated Story" };
+const conditions = { Author: "John Doe" };
+sheet.update(newData, conditions);
+}
+```
+
+#### データの Upsert（挿入または更新）
+条件に一致するデータがあれば更新、なければ挿入します。
+
+```javascript
+function upsertData() {
+const spreadsheet = new gasdb.Spreadsheet();
+const sheet = spreadsheet.at("Stories");
+
+// Upsert を実行
+const data = { Title: "Dynamic Story", Author: "Jane Doe" };
+const conditions = { Title: "Dynamic Story" };
+sheet.upsert(data, conditions);
+}
+```
 
 ---
 
-## 国際化 (i18n)
+## 高度な機能
 
-このプロジェクトでは、デフォルトで英語のドキュメントを提供しています。日本語のドキュメントは `docs/ja/` フォルダに配置されています。
+#### 新しいシートの作成または取得
+指定した名前のシートが存在しない場合、新しく作成します。
 
-ディレクトリ構造の例：
+```javascript
+function createOrFindSheet() {
+const spreadsheet = new gasdb.Spreadsheet();
+const sheet = spreadsheet.createOrFindSheet("NewSheet");
+}
+```
+
+---
+
+## スコープ（権限）
+このライブラリを利用するには、プロジェクトのスコープに以下を追加してください。
+
+```
+https://www.googleapis.com/auth/spreadsheets
+```
 
 
-日本語の README: [docs/ja/README.md](docs/ja/README.md)
+Apps Script のスクリプトエディタで「プロジェクトの設定」を開き、スコープを明示的に指定することで、エラーを防止できます。
+
+---
+
+## よくある質問
+
+### Q: エラーが発生しました。`TypeError: gasdb.Spreadsheet is not a constructor` と表示されます。
+- ライブラリが正しく追加されているか確認してください。
+- 最新バージョンを選択していることを確認してください。
+
+### Q: スクリプト ID を変更する必要がありますか？
+- ライブラリを利用するだけの場合、スクリプト ID を変更する必要はありません。
 
 ---
 
 ## ライセンス
-
-このプロジェクトは MIT ライセンスの下で提供されています。詳細については [LICENSE](LICENSE) ファイルをご確認ください。
-
----
-
-## フィードバック
-
-バグ報告や機能のリクエストがある場合は、[issue](https://github.com/your-username/gas-db/issues) を作成してください。貢献やアイデアも歓迎します！
+このライブラリは MIT ライセンスの下で公開されています。

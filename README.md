@@ -1,145 +1,169 @@
-# gas-db
+# gas-db: Google Sheets Wrapper Library for Apps Script
 
-`gas-db` is a library designed to simplify working with Google Sheets through Google Apps Script (GAS). It provides an intuitive API for performing CRUD operations on Google Sheets, enabling developers to treat Sheets like a database.
+`gas-db` is a wrapper library for Google Apps Script that simplifies working with Google Sheets. It provides an intuitive API to handle CRUD operations such as retrieving, searching, inserting, updating, and deleting data in sheets.
 
 ---
 
 ## Features
 
-- Treat Google Sheets as a database with structured data operations.
-- Retrieve and manipulate data using column names as keys.
-- Filter and query data with ease.
-- Insert, update, and clear rows programmatically.
-- Automatically generates a column-to-index dictionary for simpler data handling.
+- Access and manipulate sheet data as JSON-like objects
+- Simple and efficient API for CRUD operations
+- Manage multiple sheets easily
+- Use column names as keys for data manipulation
 
 ---
 
-## Installation
+## Setup
 
-1. Clone this repository:
-   ```
-   git clone https://github.com/your-username/gas-db.git
-   cd gas-db
-   ```
+This library is already published as an Apps Script library. Follow the steps below to include it in your project:
 
-2. Copy the code into your Google Apps Script project:
-   - Open the [GAS Editor](https://script.google.com/).
-   - Copy the files `sheet.js` and `spreadsheet.js` into your GAS project.
+1. **Open your Apps Script project**  
+   Open the [Google Apps Script editor](https://script.google.com/) and create a new project.
 
-3. **Optional**: If you need advanced features or external dependencies, bundle the code using Webpack or similar tools before importing it into GAS.
+2. **Add the library**  
+   In the script editor, go to the "Libraries" section, and enter the following script ID:  
+
+```
+1-oNObQAV_UrShtdZWEy8FwqmjGpD0-kVxWw-VdZdg0Dmx4xPs9Jp0-5Z
+```
+
+
+3. **Select a version**  
+Choose the latest version from the dropdown menu.
+
+4. **Save**  
+Click "Save" to add the library to your project.
 
 ---
 
 ## Usage
 
-Here’s a quick example of how to use `gas-db`:
+### 1. Basic Operations
 
-```
-import Spreadsheet from './spreadsheet'; // Adjust path as necessary
+#### Creating an Instance of the `Spreadsheet` Class
+The following example demonstrates how to fetch a sheet and retrieve all data from it.
 
-// Access the active spreadsheet
-const db = Spreadsheet.from();
+```javascript
+function getAllData() {
+// Instantiate the Spreadsheet class
+const spreadsheet = new gasdb.Spreadsheet();
 
-// Get a sheet instance by name
-const users = db.at('Users');
+// Access the sheet "Stories"
+const sheet = spreadsheet.at("Stories");
 
-// Fetch all data
-const allUsers = users.findAll();
-Logger.log(allUsers);
-
-// Filter users based on conditions
-const admins = users.find({ role: 'admin' });
-Logger.log(admins);
-
-// Insert new data
-users.insert({ name: 'John Doe', role: 'user', age: 30 });
-
-// Update data matching conditions
-users.update({ role: 'admin' }, { name: 'John Doe' });
-
-// Clear all rows except the header
-users.clear();
+// Retrieve all data from the sheet
+const data = sheet.findAll();
+Logger.log(data);
+}
 ```
 
 ---
 
-## Contribution Guide
+### 2. CRUD Operations
 
-We welcome contributions to improve this library! Please follow the steps below to contribute:
+#### Search Data by Conditions
+Retrieve only the data that matches specific conditions.
 
-### **1. Fork the Repository**
-Click the "Fork" button on this repository to create your own copy.
+```javascript
+function findData() {
+const spreadsheet = new gasdb.Spreadsheet();
+const sheet = spreadsheet.at("Stories");
 
-### **2. Clone Your Fork**
-```
-git clone https://github.com/your-username/gas-db.git
-cd gas-db
-```
-
-### **3. Create a New Branch**
-```
-git checkout -b feature/your-feature-name
-```
-
-### **4. Make Changes**
-Edit the code, write tests, or update the documentation.
-
-### **5. Test Your Changes**
-- Copy your changes into a GAS project.
-- Test the functionality in a real Google Sheets environment.
-
-### **6. Commit and Push**
-```
-git add .
-git commit -m "Add feature: your-feature-name"
-git push origin feature/your-feature-name
+// Search for data that matches the conditions
+const conditions = { Title: "Adventure" };
+const results = sheet.find(conditions);
+Logger.log(results);
+}
 ```
 
-### **7. Submit a Pull Request**
-Go to the original repository and create a Pull Request (PR). Add details about the changes you’ve made.
+#### Insert Data
+Add new data to the sheet.
+
+```javascript
+function insertData() {
+const spreadsheet = new gasdb.Spreadsheet();
+const sheet = spreadsheet.at("Stories");
+
+// Insert data
+sheet.insert({ Title: "New Story", Author: "John Doe" });
+}
+```
+
+#### Update Data
+Update existing data based on specific conditions.
+
+```javascript
+function updateData() {
+const spreadsheet = new gasdb.Spreadsheet();
+const sheet = spreadsheet.at("Stories");
+
+// Update data that matches the conditions
+const newData = { Title: "Updated Story" };
+const conditions = { Author: "John Doe" };
+sheet.update(newData, conditions);
+}
+```
+
+#### Upsert Data (Insert or Update)
+Insert data if it doesn't exist, otherwise update it.
+
+```javascript
+function upsertData() {
+const spreadsheet = new gasdb.Spreadsheet();
+const sheet = spreadsheet.at("Stories");
+
+// Perform upsert
+const data = { Title: "Dynamic Story", Author: "Jane Doe" };
+const conditions = { Title: "Dynamic Story" };
+sheet.upsert(data, conditions);
+}
+```
 
 ---
 
-## Development Workflow
+## Advanced Features
 
-1. **Linting**:
-   ```
-   npm run lint
-   ```
+#### Create or Retrieve a Sheet
+Create a new sheet if it doesn't already exist.
 
-2. **Bundling**:
-   If external dependencies are added (e.g., `lodash`):
-   ```
-   npm run build
-   ```
-
-3. **Testing**:
-   - Test in a real Google Apps Script project.
-   - Add any new functionality to the documentation.
+```javascript
+function createOrFindSheet() {
+const spreadsheet = new gasdb.Spreadsheet();
+const sheet = spreadsheet.createOrFindSheet("NewSheet");
+}
+```
 
 ---
 
-## Directory Structure
+## Required Scopes
+
+To use this library, ensure your project's manifest includes the following scope:
+
+```
+https://www.googleapis.com/auth/spreadsheets
+```
+
+
+In the Apps Script editor, go to "Project Settings" to explicitly define the scope and avoid errors.
 
 ---
 
-## Internationalization (i18n)
+## FAQ
 
-The main documentation is provided in English. For other languages, additional folders under `docs/` are used. For example:
+### Q: I got the error `TypeError: gasdb.Spreadsheet is not a constructor`. What should I do?
+- Verify that the library has been added correctly to your project.
+- Ensure you have selected the latest version of the library.
 
-
-### Translations
-
-- [日本語 (Japanese)](docs/ja/README.md)
-
-If you'd like to contribute to the translations, please submit a Pull Request!
+### Q: Do I need to change the script ID?
+- No, you don't need to change the script ID to use the library.
 
 ---
 
 ## License
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This library is distributed under the MIT License.
 
 ---
 
-## Feedback
-If you encounter any issues or have feature requests, please open an [issue](https://github.com/shunta-furukawa/gas-db/issues). Contributions, ideas, and feedback are always welcome!
+## Japanese Documentation
+
+The Japanese documentation for this library can be found at [`docs/ja/README.md`](docs/ja/README.md).
