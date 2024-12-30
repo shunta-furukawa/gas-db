@@ -172,10 +172,6 @@ In the Apps Script editor, go to "Project Settings" to explicitly define the sco
 
 ## FAQ
 
-### Q: I got the error `TypeError: gasdb.Spreadsheet is not a constructor`. What should I do?
-- Verify that the library has been added correctly to your project.
-- Ensure you have selected the latest version of the library.
-
 ### Q: Do I need to change the script ID?
 - No, you don't need to change the script ID to use the library.
 
