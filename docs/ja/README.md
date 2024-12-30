@@ -59,7 +59,29 @@ Logger.log(data);
 
 ---
 
-### 2. CRUD 操作
+### 2. `from()` を使用して別のスプレッドシートにアクセスする
+
+`Spreadsheet().from(scriptId)` メソッドを使用すると、スクリプト ID を指定して別の Google スプレッドシートに接続できます。これは、現在アクティブでないスプレッドシートを操作したい場合に便利です。
+
+#### 例
+
+```javascript
+function accessAnotherSpreadsheet() {
+// Spreadsheet クラスをインスタンス化し、別のスプレッドシートに接続
+const spreadsheet = new gasdb.Spreadsheet().from("ANOTHER_SPREADSHEET_ID");
+
+// 他のスプレッドシート内の "Stories" シートを取得
+const sheet = spreadsheet.at("Stories");
+
+// データを取得
+const data = sheet.findAll();
+Logger.log(data);
+}
+```
+
+---
+
+### 3. CRUD 操作
 
 #### 条件付きデータの検索
 条件に一致するデータのみを取得します。
