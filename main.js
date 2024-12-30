@@ -1,5 +1,9 @@
-import filter from 'lodash.filter';
-import flow from 'lodash.flow';
+ // WARNING: This is not a drop in replacement solution and
+// it might not work for some edge cases. Test your code! 
+const flow =
+  funcs =>
+  (...args) =>
+    funcs.reduce((prev, fnc) => [fnc(...prev)], args)[0]
 
 /**
  * GAS の Sheetクラスのラッパ
@@ -97,7 +101,7 @@ class Sheet {
    * @memberof Sheet
    */
   find(conditions = {}) {
-    return flow(Object.keys(conditions).map(k => s => filter(s, o => o[k] === conditions[k])))(
+    return flow(Object.keys(conditions).map(k => s => s.filter(o => o[k] === conditions[k])))(
       this.all
     );
   }
@@ -152,8 +156,9 @@ class Sheet {
    * @memberof Sheet
    */
   update(data, conditions) {
+    let updated = false;
     if (conditions) {
-      flow(Object.keys(conditions).map(k => s => filter(s, o => o[k] === conditions[k])))(
+      flow(Object.keys(conditions).map(k => s => s.filter(o => o[k] === conditions[k])))(
         this.findAll()
       ).forEach(x => {
         const r = this.source.getRange(x.rI, 1, 1, this.lCol);
@@ -162,16 +167,99 @@ class Sheet {
           v[0][this.dict[k] - 1] = data[k];
         });
         r.setValues(v);
+        updated = true;
       });
     }
+    return updated;
+  }
+
+  upsert(data, conditions){
+    if(this.find(conditions).length > 0){
+      this.update(data,conditions)
+    } else {
+      this.insert(data)
+    }
+  }
+
+  refreshFormula() {
+    this.source
+      .getRange(this.hI, 1, 1, this.lCol)
+      .getFormulas()[0]
+      .forEach((c, i) => {
+        Logger.log(c);
+        if (c.indexOf('ARRAYFORMULA') !== -1) {
+          Logger.log(`MATCHED : ${i + 1}`);
+          this.source.getRange(this.hI + 1, i + 1, this.lRow - this.hI, 1).clear();
+        }
+      });
   }
 
   clear() {
     if (this.lRow - this.hI > 0) {
-      this.source.getRange(this.hI + 1, 1, this.lRow - this.hI, this.lCol).clear();
+      this.source
+        .getRange(this.hI + 1, 1, this.lRow - this.hI, this.lCol)
+        .clear({ contentOnly: true });
     }
     this.lRow = this.source.getLastRow();
   }
 }
 
-export default Sheet;
+/**
+ * GASのオブジェクトである Spreadsheet クラス を JSで扱いやすようにするラッパークラス
+ *
+ * @class Spreadsheet
+ */
+class Spreadsheet {
+  /**
+   * GAS のオブジェクトを取得し、Spreadsheetの source にセットする。
+   * @memberof Spreadsheet
+   */
+  constructor() {
+    this.source = SpreadsheetApp.getActiveSpreadsheet();
+  }
+
+  /**
+   * シート名から、その名前をもつシートを得る関数です。
+   * シートは、データの属性名を表すヘッダ行が存在することを仮定しています。その行をカラム定義がされている行とみなし
+   * データ抽出時にキーとなる値を生成します。そのため、ヘッダ行の指定がが必要になります。
+   *
+   * @param {String} name シート名
+   * @param {Number} [hI=1] ヘッダ行の行数
+   * @returns Sheetクラスのインスタンス
+   * @memberof Spreadsheet
+   */
+  at(name, hI = 1) {
+    const sheetSource = this.source.getSheetByName(name);
+    if (!sheetSource) {
+      throw new Error();
+    }
+    return new Sheet(this.source.getSheetByName(name), hI);
+  }
+
+  /**
+   *シート名を取得します。
+   *
+   * @param {*} name シート名
+   * @param {*} [hI=1] ヘッダ行の行数
+   * @returns Sheetクラスのインスタンス
+   * @memberof Spreadsheet
+   */
+  createOrFindSheet(name, hI = 1) {
+    let sheetSource;
+    try {
+      sheetSource = this.at(name).source;
+    } catch (e) {
+      sheetSource = this.source.insertSheet(name);
+    }
+    return new Sheet(sheetSource, hI);
+  }
+
+  from(spreadsheetID) {
+    if (spreadsheetID) {
+      this.source = SpreadsheetApp.openById(spreadsheetID);
+    } else {
+      this.source = SpreadsheetApp.getActiveSpreadsheet();
+    }
+    return this;
+  }
+}
