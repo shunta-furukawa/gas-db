@@ -38,22 +38,35 @@
 
 ## 使用例
 
+### 利用のメリット
+`gas-db` を使用することで、コードの冗長性を減らし、操作を簡潔に記述できます。また、スプレッドシートの低レベルな操作（例: 範囲の指定やフィルタリング）を抽象化し、メンテナンス性の高いコードを書くことが可能です。
+
 ### 1. 基本操作
 
-#### Spreadsheet クラスのインスタンスを作成
+Spreadsheet クラスのインスタンスを作成。
+
 以下の例は、Google Sheets からシートを取得し、全データを取得するコードです。
 
+#### 例 
+
+`gas-db` を使用しない場合:
+
 ```javascript
-function getAllData() {
-// Spreadsheet クラスのインスタンス化
-const spreadsheet = new gasdb.Spreadsheet();
+function getAllDataWithoutGasDb() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Stories");
+  const data = sheet.getDataRange().getValues();
+  Logger.log(data);
+}
+```
 
-// シート "Stories" を取得
-const sheet = spreadsheet.at("Stories");
+`gas-db` を使用する場合:
 
-// シート全体のデータを取得
-const data = sheet.findAll();
-Logger.log(data);
+```javascript
+function getAllDataWithGasDb() {
+  const spreadsheet = new gasdb.Spreadsheet();
+  const sheet = spreadsheet.at("Stories");
+  const data = sheet.findAll();
+  Logger.log(data);
 }
 ```
 
@@ -65,17 +78,25 @@ Logger.log(data);
 
 #### 例
 
+`gas-db` を使用しない場合:
+
 ```javascript
-function accessAnotherSpreadsheet() {
-// Spreadsheet クラスをインスタンス化し、別のスプレッドシートに接続
-const spreadsheet = new gasdb.Spreadsheet().from("ANOTHER_SPREADSHEET_ID");
+function accessAnotherSpreadsheetWithoutGasDb() {
+  const anotherSpreadsheet = SpreadsheetApp.openById("ANOTHER_SPREADSHEET_ID");
+  const sheet = anotherSpreadsheet.getSheetByName("Stories");
+  const data = sheet.getDataRange().getValues();
+  Logger.log(data);
+}
+```
 
-// 他のスプレッドシート内の "Stories" シートを取得
-const sheet = spreadsheet.at("Stories");
+`gas-db` を使用する場合:
 
-// データを取得
-const data = sheet.findAll();
-Logger.log(data);
+```javascript
+function accessAnotherSpreadsheetWithGasDb() {
+  const spreadsheet = new gasdb.Spreadsheet().from("ANOTHER_SPREADSHEET_ID");
+  const sheet = spreadsheet.at("Stories");
+  const data = sheet.findAll();
+  Logger.log(data);
 }
 ```
 
@@ -86,58 +107,112 @@ Logger.log(data);
 #### 条件付きデータの検索
 条件に一致するデータのみを取得します。
 
-```javascript
-function findData() {
-const spreadsheet = new gasdb.Spreadsheet();
-const sheet = spreadsheet.at("Stories");
+`gas-db` を使用しない場合:
 
-// 条件を指定してデータを検索
-const conditions = { Title: "Adventure" };
-const results = sheet.find(conditions);
-Logger.log(results);
+```javascript
+function findDataWithoutGasDb() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Stories");
+  const data = sheet.getDataRange().getValues();
+  const results = data.filter(row => row[0] === "Adventure"); // "Title" が最初の列にあると仮定
+  Logger.log(results);
+}
+```
+
+`gas-db` を使用する場合:
+
+```javascript
+function findDataWithGasDb() {
+  const spreadsheet = new gasdb.Spreadsheet();
+  const sheet = spreadsheet.at("Stories");
+  const results = sheet.find({ Title: "Adventure" });
+  Logger.log(results);
 }
 ```
 
 #### データの挿入
 新しいデータをシートに追加します。
 
-```javascript
-function insertData() {
-const spreadsheet = new gasdb.Spreadsheet();
-const sheet = spreadsheet.at("Stories");
+`gas-db` を使用しない場合:
 
-// データを挿入
-sheet.insert({ Title: "New Story", Author: "John Doe" });
+```javascript
+function insertDataWithoutGasDb() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Stories");
+  sheet.appendRow(["New Story", "John Doe"]); // "Title" と "Author" のみの列と仮定
+}
+```
+
+`gas-db` を使用する場合:
+
+```javascript
+function insertDataWithGasDb() {
+  const spreadsheet = new gasdb.Spreadsheet();
+  const sheet = spreadsheet.at("Stories");
+  sheet.insert({ Title: "New Story", Author: "John Doe" });
 }
 ```
 
 #### データの更新
 既存データを条件付きで更新します。
 
-```javascript
-function updateData() {
-const spreadsheet = new gasdb.Spreadsheet();
-const sheet = spreadsheet.at("Stories");
+`gas-db` を使用しない場合:
 
-// データを更新
-const newData = { Title: "Updated Story" };
-const conditions = { Author: "John Doe" };
-sheet.update(newData, conditions);
+```javascript
+function updateDataWithoutGasDb() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Stories");
+  const data = sheet.getDataRange().getValues();
+  const updatedData = data.map(row => {
+    if (row[1] === "John Doe") { // "Author" が 2 番目の列にあると仮定
+      row[0] = "Updated Story"; // "Title" を更新
+    }
+    return row;
+  });
+  sheet.getRange(1, 1, updatedData.length, updatedData[0].length).setValues(updatedData);
+}
+```
+
+`gas-db` を使用する場合:
+
+```javascript
+function updateDataWithGasDb() {
+  const spreadsheet = new gasdb.Spreadsheet();
+  const sheet = spreadsheet.at("Stories");
+  const newData = { Title: "Updated Story" };
+  const conditions = { Author: "John Doe" };
+  sheet.update(newData, conditions);
 }
 ```
 
 #### データの Upsert（挿入または更新）
 条件に一致するデータがあれば更新、なければ挿入します。
 
-```javascript
-function upsertData() {
-const spreadsheet = new gasdb.Spreadsheet();
-const sheet = spreadsheet.at("Stories");
+`gas-db` を使用しない場合:
 
-// Upsert を実行
-const data = { Title: "Dynamic Story", Author: "Jane Doe" };
-const conditions = { Title: "Dynamic Story" };
-sheet.upsert(data, conditions);
+```javascript
+function upsertDataWithoutGasDb() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Stories");
+  const data = sheet.getDataRange().getValues();
+  const existingRowIndex = data.findIndex(row => row[0] === "Dynamic Story"); // "Title" が最初の列にあると仮定
+
+  if (existingRowIndex !== -1) {
+    // 行を更新
+    const range = sheet.getRange(existingRowIndex + 1, 1, 1, data[0].length);
+    range.setValues([["Dynamic Story", "Jane Doe"]]);
+  } else {
+    // 新しいデータを挿入
+    sheet.appendRow(["Dynamic Story", "Jane Doe"]);
+  }
+}
+```
+
+`gas-db` を使用する場合:
+
+```javascript
+function upsertDataWithGasDb() {
+  const spreadsheet = new gasdb.Spreadsheet();
+  const sheet = spreadsheet.at("Stories");
+  const data = { Title: "Dynamic Story", Author: "Jane Doe" };
+  const conditions = { Title: "Dynamic Story" };
+  sheet.upsert(data, conditions);
 }
 ```
 
@@ -152,6 +227,56 @@ sheet.upsert(data, conditions);
 function createOrFindSheet() {
 const spreadsheet = new gasdb.Spreadsheet();
 const sheet = spreadsheet.createOrFindSheet("NewSheet");
+}
+```
+
+---
+
+### ヘッダ行の指定
+
+`gas-db` を使用する際、Google スプレッドシートの1行目がデフォルトでヘッダ行（列名）として扱われます。しかし、データ構造によってはヘッダ行が別の行に存在する場合があります。hI（headerIndex）を第二引数として指定することで、このデフォルト動作を変更し、適切な行をヘッダ行として指定することが可能です。
+
+#### 主な特徴：
+
+- シート内のヘッダ行を柔軟に指定可能。
+- 列名が1行目以外にある場合でも対応可能。
+- データを事前に加工する必要がなく、そのまま利用できます。
+
+#### 使用例：
+
+カスタムヘッダ行を指定する
+
+```javascript
+function customHeaderIndex() {
+  const spreadsheet = new gasdb.Spreadsheet();
+
+  // ヘッダ行が2行目の場合
+  const sheet = spreadsheet.at("Stories", 2);
+
+  // 2行目をキーとしてデータを取得
+  const data = sheet.findAll();
+  Logger.log(data);
+}
+```
+
+この例では：
+
+- シート「Stories」の2行目がヘッダ行である場合、`hI = 2` を指定することで、その行をキーにしてデータを処理します。
+
+#### デフォルト動作
+
+`hI` を指定しない場合、`gas-db` はデフォルトで1行目をヘッダ行とみなします。
+
+```javascript
+function defaultHeaderIndex() {
+  const spreadsheet = new gasdb.Spreadsheet();
+
+  // ヘッダ行がデフォルトの1行目
+  const sheet = spreadsheet.at("Stories");
+
+  // データを取得
+  const data = sheet.findAll();
+  Logger.log(data);
 }
 ```
 

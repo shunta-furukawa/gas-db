@@ -38,22 +38,34 @@ Click "Save" to add the library to your project.
 
 ## Usage
 
+### Summary of Benefits
+Using `gas-db` reduces boilerplate code, simplifies common operations, and allows developers to focus on business logic rather than low-level spreadsheet manipulations. 
+The comparison highlights how gas-db abstracts away complexities like range manipulation and data filtering, making the code cleaner and easier to maintain.
+
 ### 1. Basic Operations
 
-#### Creating an Instance of the `Spreadsheet` Class
-The following example demonstrates how to fetch a sheet and retrieve all data from it.
+Creating an Instance of the `Spreadsheet` Class. The following example demonstrates how to fetch a sheet and retrieve all data from it.
+
+#### Example
+
+Without `gas-db`:
 
 ```javascript
-function getAllData() {
-// Instantiate the Spreadsheet class
-const spreadsheet = new gasdb.Spreadsheet();
+function getAllDataWithoutGasDb() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Stories");
+  const data = sheet.getDataRange().getValues();
+  Logger.log(data);
+}
+```
 
-// Access the sheet "Stories"
-const sheet = spreadsheet.at("Stories");
+With `gas-db`:
 
-// Retrieve all data from the sheet
-const data = sheet.findAll();
-Logger.log(data);
+```javascript
+function getAllDataWithGasDb() {
+  const spreadsheet = new gasdb.Spreadsheet();
+  const sheet = spreadsheet.at("Stories");
+  const data = sheet.findAll();
+  Logger.log(data);
 }
 ```
 
@@ -65,17 +77,25 @@ The `Spreadsheet().from(scriptId)` method allows you to connect to a different G
 
 #### Example
 
+Without `gas-db`:
+
 ```javascript
-function accessAnotherSpreadsheet() {
-// Instantiate the Spreadsheet class and connect to another spreadsheet by ID
-const spreadsheet = new gasdb.Spreadsheet().from("ANOTHER_SPREADSHEET_ID");
+function accessAnotherSpreadsheetWithoutGasDb() {
+  const anotherSpreadsheet = SpreadsheetApp.openById("ANOTHER_SPREADSHEET_ID");
+  const sheet = anotherSpreadsheet.getSheetByName("Stories");
+  const data = sheet.getDataRange().getValues();
+  Logger.log(data);
+}
+```
 
-// Access the sheet "Stories" from the other spreadsheet
-const sheet = spreadsheet.at("Stories");
+With `gas-db`:
 
-// Retrieve data from the sheet
-const data = sheet.findAll();
-Logger.log(data);
+```javascript
+function accessAnotherSpreadsheetWithGasDb() {
+  const spreadsheet = new gasdb.Spreadsheet().from("ANOTHER_SPREADSHEET_ID");
+  const sheet = spreadsheet.at("Stories");
+  const data = sheet.findAll();
+  Logger.log(data);
 }
 ```
 
@@ -86,58 +106,112 @@ Logger.log(data);
 #### Search Data by Conditions
 Retrieve only the data that matches specific conditions.
 
-```javascript
-function findData() {
-const spreadsheet = new gasdb.Spreadsheet();
-const sheet = spreadsheet.at("Stories");
+Without `gas-db`:
 
-// Search for data that matches the conditions
-const conditions = { Title: "Adventure" };
-const results = sheet.find(conditions);
-Logger.log(results);
+```javascript
+function findDataWithoutGasDb() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Stories");
+  const data = sheet.getDataRange().getValues();
+  const results = data.filter(row => row[0] === "Adventure"); // Assuming "Title" is in the first column
+  Logger.log(results);
+}
+```
+
+With `gas-db`:
+
+```javascript
+function findDataWithGasDb() {
+  const spreadsheet = new gasdb.Spreadsheet();
+  const sheet = spreadsheet.at("Stories");
+  const results = sheet.find({ Title: "Adventure" });
+  Logger.log(results);
 }
 ```
 
 #### Insert Data
 Add new data to the sheet.
 
-```javascript
-function insertData() {
-const spreadsheet = new gasdb.Spreadsheet();
-const sheet = spreadsheet.at("Stories");
+Without `gas-db`:
 
-// Insert data
-sheet.insert({ Title: "New Story", Author: "John Doe" });
+```javascript
+function insertDataWithoutGasDb() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Stories");
+  sheet.appendRow(["New Story", "John Doe"]); // Assuming Title and Author are the only columns
+}
+```
+
+With `gas-db`:
+
+```javascript
+function insertDataWithGasDb() {
+  const spreadsheet = new gasdb.Spreadsheet();
+  const sheet = spreadsheet.at("Stories");
+  sheet.insert({ Title: "New Story", Author: "John Doe" });
 }
 ```
 
 #### Update Data
 Update existing data based on specific conditions.
 
-```javascript
-function updateData() {
-const spreadsheet = new gasdb.Spreadsheet();
-const sheet = spreadsheet.at("Stories");
+Without `gas-db`:
 
-// Update data that matches the conditions
-const newData = { Title: "Updated Story" };
-const conditions = { Author: "John Doe" };
-sheet.update(newData, conditions);
+```javascript
+function updateDataWithoutGasDb() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Stories");
+  const data = sheet.getDataRange().getValues();
+  const updatedData = data.map(row => {
+    if (row[1] === "John Doe") { // Assuming "Author" is in the second column
+      row[0] = "Updated Story"; // Update the "Title"
+    }
+    return row;
+  });
+  sheet.getRange(1, 1, updatedData.length, updatedData[0].length).setValues(updatedData);
+}
+```
+
+With `gas-db`:
+
+```javascript
+function updateDataWithGasDb() {
+  const spreadsheet = new gasdb.Spreadsheet();
+  const sheet = spreadsheet.at("Stories");
+  const newData = { Title: "Updated Story" };
+  const conditions = { Author: "John Doe" };
+  sheet.update(newData, conditions);
 }
 ```
 
 #### Upsert Data (Insert or Update)
 Insert data if it doesn't exist, otherwise update it.
 
-```javascript
-function upsertData() {
-const spreadsheet = new gasdb.Spreadsheet();
-const sheet = spreadsheet.at("Stories");
+Without `gas-db`:
 
-// Perform upsert
-const data = { Title: "Dynamic Story", Author: "Jane Doe" };
-const conditions = { Title: "Dynamic Story" };
-sheet.upsert(data, conditions);
+```javascript
+function upsertDataWithoutGasDb() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Stories");
+  const data = sheet.getDataRange().getValues();
+  const existingRowIndex = data.findIndex(row => row[0] === "Dynamic Story"); // Assuming "Title" is in the first column
+
+  if (existingRowIndex !== -1) {
+    // Update the row
+    const range = sheet.getRange(existingRowIndex + 1, 1, 1, data[0].length);
+    range.setValues([["Dynamic Story", "Jane Doe"]]);
+  } else {
+    // Insert new data
+    sheet.appendRow(["Dynamic Story", "Jane Doe"]);
+  }
+}
+```
+
+With `gas-db`:
+
+```javascript
+function upsertDataWithGasDb() {
+  const spreadsheet = new gasdb.Spreadsheet();
+  const sheet = spreadsheet.at("Stories");
+  const data = { Title: "Dynamic Story", Author: "Jane Doe" };
+  const conditions = { Title: "Dynamic Story" };
+  sheet.upsert(data, conditions);
 }
 ```
 
@@ -145,13 +219,63 @@ sheet.upsert(data, conditions);
 
 ## Advanced Features
 
-#### Create or Retrieve a Sheet
+### Create or Retrieve a Sheet
 Create a new sheet if it doesn't already exist.
 
 ```javascript
 function createOrFindSheet() {
 const spreadsheet = new gasdb.Spreadsheet();
 const sheet = spreadsheet.createOrFindSheet("NewSheet");
+}
+```
+
+--- 
+
+### Customizing the Header Index (`hI`)
+
+When working with a Google Sheet, `gas-db` assumes by default that the first row (1) contains the headers (column names). These headers are used as keys when processing the data. However, if your data uses a different row as the header (e.g., the second or third row), you can adjust this behavior by specifying the hI (headerIndex) parameter.
+
+#### Key Features:
+
+- Define which row contains the column headers when interacting with a sheet.
+- Allows flexible data processing when headers are not in the first row.
+- Prevents manual pre-processing of sheets with non-standard header rows.
+
+#### Usage Examples:
+
+Specifying a Custom Header Index
+
+```javascript
+function customHeaderIndex() {
+  const spreadsheet = new gasdb.Spreadsheet();
+
+  // Access a sheet with headers in the 2nd row
+  const sheet = spreadsheet.at("Stories", 2);
+
+  // Retrieve all data, using the 2nd row as keys for the data objects
+  const data = sheet.findAll();
+  Logger.log(data);
+}
+```
+
+In this example:
+
+- If the sheet "Stories" has headers in the 2nd row, specifying hI = 2 ensures that the keys for the returned data objects correspond to the column names in row 2.
+
+#### Default Behavior
+
+If you do not specify the hI parameter, gas-db will assume the header row is the first row (hI = 1).
+
+```javascript
+function defaultHeaderIndex() {
+  const spreadsheet = new gasdb.Spreadsheet();
+
+  // Access the sheet assuming the headers are in the 1st row
+  const sheet = spreadsheet.at("Stories");
+
+  // Retrieve all data
+  const data = sheet.findAll();
+  Logger.log(data);
 }
 ```
 
