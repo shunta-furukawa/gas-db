@@ -169,6 +169,42 @@ Apps Script のスクリプトエディタで「プロジェクトの設定」�
 
 ---
 
+## トラブルシューティング
+
+Google Sheets を使用している際に、以下のような API エラーが発生する場合があります：
+
+- `503 Service Unavailable`: このエラーは、Google Sheets API の一時的な問題により発生することがあります。
+
+### 推奨事項
+
+#### リトライロジックの実装
+ 
+エラーが発生した場合、指数バックオフを利用したリトライメカニズムを実装してください。以下はその例です：
+
+    ```javascript
+    function retryWithBackoff(fn, retries = 5) {
+        for (let i = 0; i < retries; i++) {
+            try {
+            return fn();
+            } catch (e) {
+            if (i === retries - 1) throw e;
+            const backoffTime = Math.pow(2, i) * 1000;
+            Utilities.sleep(backoffTime);
+            }
+        }
+    }
+    ``` 
+
+#### シートのローテーション 
+
+もしレート制限やサービス中断が頻発する場合、複数のシートをローテーションで利用したり、大きな操作を小さなチャンクに分割することを検討してください。
+
+Google Sheets API に関するさらなる情報は、[公式ドキュメント](https://developers.google.com/sheets/api/troubleshoot-api-errors#503-service-unavailable) を参照してください。
+
+> **注意** : 上記のエラー処理戦略は `gas-db` ライブラリには含まれていません。本ライブラリは CRUD 操作の簡略化に焦点を当てています。そのため、開発者自身のユースケースに合わせたエラー処理の実装を推奨します。
+
+---
+
 ## よくある質問
 
 ### Q: スクリプト ID を変更する必要がありますか？

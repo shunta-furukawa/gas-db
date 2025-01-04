@@ -170,6 +170,38 @@ In the Apps Script editor, go to "Project Settings" to explicitly define the sco
 
 ---
 
+## Troubleshooting
+
+When working with Google Sheets, you may encounter API errors, such as:
+
+- 503 Service Unavailable: This error often occurs due to a temporary issue with the Google Sheets API.
+
+### Recommendations:
+
+- Retry Logic: Implement a retry mechanism with exponential backoff. For example:
+
+    ```javascript
+    function retryWithBackoff(fn, retries = 5) {
+        for (let i = 0; i < retries; i++) {
+            try {
+            return fn();
+            } catch (e) {
+            if (i === retries - 1) throw e;
+            const backoffTime = Math.pow(2, i) * 1000;
+            Utilities.sleep(backoffTime);
+            }
+        }
+    }
+    ``` 
+
+- Sheet Rotation: If you frequently encounter rate limits or service interruptions, consider rotating between multiple sheets or breaking up large operations into smaller chunks.
+
+For more details, refer to [Google Sheets API Troubleshooting](https://developers.google.com/sheets/api/troubleshoot-api-errors#503-service-unavailable).
+
+> Note: Error handling strategies like these are not included in the gas-db library, as the library focuses on simplifying CRUD operations. Developers are encouraged to implement error handling based on their specific use cases.
+
+---
+
 ## FAQ
 
 ### Q: Do I need to change the script ID?
