@@ -224,8 +224,8 @@ Create a new sheet if it doesn't already exist.
 
 ```javascript
 function createOrFindSheet() {
-const spreadsheet = new gasdb.Spreadsheet();
-const sheet = spreadsheet.createOrFindSheet("NewSheet");
+    const spreadsheet = new gasdb.Spreadsheet();
+    const sheet = spreadsheet.createOrFindSheet("NewSheet");
 }
 ```
 

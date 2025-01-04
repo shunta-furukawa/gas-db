@@ -225,8 +225,8 @@ function upsertDataWithGasDb() {
 
 ```javascript
 function createOrFindSheet() {
-const spreadsheet = new gasdb.Spreadsheet();
-const sheet = spreadsheet.createOrFindSheet("NewSheet");
+    const spreadsheet = new gasdb.Spreadsheet();
+    const sheet = spreadsheet.createOrFindSheet("NewSheet");
 }
 ```
 
