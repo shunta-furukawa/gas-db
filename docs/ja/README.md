@@ -306,19 +306,19 @@ Google Sheets を使用している際に、以下のような API エラーが�
  
 エラーが発生した場合、指数バックオフを利用したリトライメカニズムを実装してください。以下はその例です：
 
-    ```javascript
-    function retryWithBackoff(fn, retries = 5) {
-        for (let i = 0; i < retries; i++) {
-            try {
-            return fn();
-            } catch (e) {
-            if (i === retries - 1) throw e;
-            const backoffTime = Math.pow(2, i) * 1000;
-            Utilities.sleep(backoffTime);
-            }
-        }
-    }
-    ``` 
+ ```javascript
+ function retryWithBackoff(fn, retries = 5) {
+     for (let i = 0; i < retries; i++) {
+         try {
+         return fn();
+         } catch (e) {
+         if (i === retries - 1) throw e;
+         const backoffTime = Math.pow(2, i) * 1000;
+         Utilities.sleep(backoffTime);
+         }
+     }
+ }
+ ``` 
 
 #### シートのローテーション 
 
