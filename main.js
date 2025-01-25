@@ -1,5 +1,3 @@
-// A wrapper for Google Sheets and Spreadsheet classes in Google Apps Script, enabling simplified data manipulation and CRUD operations. It allows developers to interact with Google Sheets more effectively by providing an easy-to-use API for data retrieval, insertion, updating, and filtering based on column headers.
-
 /**
  * GAS の Sheetクラスのラッパ
  *
@@ -199,6 +197,27 @@ class Sheet {
     }
     this.lRow = this.source.getLastRow();
   }
+
+  /**
+ * 条件に合う行をすべて削除するメソッド
+ * @param {Object} [conditions={}] 検索条件を表現するオブジェクト。
+ */
+  delete(conditions = {}) {
+    // 条件に合うデータを全て取得
+    const matched = this.find(conditions);
+
+    // 行削除でインデックスがずれないように、行番号が大きいものから削除する
+    matched
+      .sort((a, b) => b.rI - a.rI)
+      .forEach(datum => {
+        this.source.deleteRow(datum.rI);
+      });
+
+    // 最終行数などの情報を更新
+    this.lRow = this.source.getLastRow();
+    this.findAll(); // all の内容を更新しておきたい場合は再取得
+  }
+
 }
 
 /**
