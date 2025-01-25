@@ -12,7 +12,7 @@
 <body>
   <h1>TODO List</h1>
   <form id="todoForm">
-    <input type="text" id="todoInput" placeholder="New task..." required/>
+    <input type="text" id="todoInput" placeholder="New task..." required />
     <button type="submit">Add</button>
   </form>
 
@@ -21,7 +21,7 @@
   <script>
     // ======== 1. APIのURLを設定（GASデプロイ時のWebアプリURL） ========
     const API_URL = "https://script.google.com/macros/s/AKfycbx34VfhWYKs_g70M79Om24EQ47jMBmm68V-zbIVi27NLc24ztbXOX2XlyRYtUM63s4MOQ/exec";
-    
+
     // ======== 2. 初期表示でTODOを全件取得 ========
     window.addEventListener('DOMContentLoaded', () => {
       fetchTodos();
@@ -30,7 +30,11 @@
     // ======== 3. TODOリストを取得して描画 ========
     async function fetchTodos() {
       try {
-        const response = await fetch(API_URL);
+        const response = await fetch(API_URL, {
+          method: "GET",
+          // CORSを有効にする（サーバーからもCORSヘッダーが返される前提）
+          mode: "cors"
+        });
         const data = await response.json();
         renderTodos(data.todos || []);
       } catch (err) {
@@ -46,6 +50,7 @@
       todos.forEach(todo => {
         const li = document.createElement('li');
         li.textContent = todo.title;
+
         if (String(todo.completed) === 'true') {
           li.classList.add('completed');
         }
@@ -85,13 +90,13 @@
       try {
         const res = await fetch(API_URL, {
           method: 'POST',
+          mode: 'cors', // CORSを有効
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'create', title })
         });
         const data = await res.json();
         if (data.success) {
-          // 再度取得して画面を更新
-          fetchTodos();
+          fetchTodos(); // 再度取得して画面を更新
         } else {
           alert('Failed to create TODO');
         }
@@ -106,6 +111,7 @@
       try {
         const res = await fetch(API_URL, {
           method: 'POST',
+          mode: 'cors',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'update', id, completed })
         });
@@ -126,6 +132,7 @@
       try {
         const res = await fetch(API_URL, {
           method: 'POST',
+          mode: 'cors',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'delete', id })
         });
