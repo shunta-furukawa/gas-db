@@ -3,149 +3,96 @@
 <head>
   <meta charset="UTF-8" />
   <title>My TODO App</title>
+  <!-- Onsen UIのCSSとFontAwesomeをCDNから読み込み -->
+  <link rel="stylesheet" href="https://unpkg.com/onsenui/css/onsenui.css">
+  <link rel="stylesheet" href="https://unpkg.com/onsenui/css/onsen-css-components.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <style>
-    body { font-family: sans-serif; }
-    li.completed { text-decoration: line-through; color: #999; }
-    button { margin-left: 8px; }
+    .completed {
+      text-decoration: line-through;
+      color: #999;
+    }
   </style>
 </head>
 <body>
-  <h1>TODO List</h1>
-  <form id="todoForm">
-    <input type="text" id="todoInput" placeholder="New task..." required />
-    <button type="submit">Add</button>
-  </form>
+  <ons-page>
+    <ons-toolbar>
+      <div class="center">TODO List (GAS Web App)</div>
+    </ons-toolbar>
+    <div style="padding: 10px;">
+      <ons-card>
+        <div class="title">New Task</div>
+        <div class="content">
+          <form id="todoForm">
+            <ons-input id="todoInput" placeholder="New task..." float required></ons-input>
+            <div style="text-align: right; margin-top: 10px;">
+              <ons-button type="submit">Add</ons-button>
+            </div>
+          </form>
+        </div>
+      </ons-card>
+      <ons-list id="todoList"></ons-list>
+    </div>
+  </ons-page>
 
-  <ul id="todoList"></ul>
-
+  <!-- Onsen UIのJavaScriptとVueをCDNから読み込み -->
+  <script src="https://unpkg.com/vue@2.6.14/dist/vue.min.js"></script>
+  <script src="https://unpkg.com/onsenui/js/onsenui.min.js"></script>
   <script>
-    // ======== 1. APIのURLを設定（GASデプロイ時のWebアプリURL） ========
-    const API_URL = "https://script.google.com/macros/s/AKfycbzaFQpLUEcPYsaJv7KKVQdLw_GA-GD8R_j2oTnSjc6f5aMguv3fMr59rqJ2fG-oewJ6Xw/exec";
-
-    // ======== 2. 初期表示でTODOを全件取得 ========
-    window.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('init', function() {
       fetchTodos();
     });
 
-    // ======== 3. TODOリストを取得して描画 ========
-    async function fetchTodos() {
-      try {
-        const response = await fetch(API_URL, {
-          method: "GET",
-          // CORSを有効にする（サーバーからもCORSヘッダーが返される前提）
-          mode: "cors"
-        });
-        const data = await response.json();
-        renderTodos(data.todos || []);
-      } catch (err) {
-        console.error(err);
-        alert("Failed to fetch TODOs");
-      }
+    function fetchTodos() {
+      google.script.run.withSuccessHandler(renderTodos).getTodos();
     }
 
-    // ======== 4. TODOリストを画面に描画 ========
     function renderTodos(todos) {
       const listEl = document.getElementById('todoList');
       listEl.innerHTML = '';
+
       todos.forEach(todo => {
-        const li = document.createElement('li');
-        li.textContent = todo.title;
-
-        if (String(todo.completed) === 'true') {
-          li.classList.add('completed');
-        }
-
-        // 完了/未完了トグルボタン
-        const toggleBtn = document.createElement('button');
-        toggleBtn.textContent = todo.completed ? 'Uncheck' : 'Check';
-        toggleBtn.addEventListener('click', async () => {
-          await updateTodo(todo.id, !todo.completed);
-        });
-
-        // 削除ボタン
-        const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = 'Delete';
-        deleteBtn.addEventListener('click', async () => {
-          await deleteTodo(todo.id);
-        });
-
-        li.appendChild(toggleBtn);
-        li.appendChild(deleteBtn);
-        listEl.appendChild(li);
+        const listItem = document.createElement('ons-list-item');
+        listItem.setAttribute('modifier', 'longdivider');
+        listItem.innerHTML = `
+          <div class="center ${todo.completed ? 'completed' : ''}">${todo.title}</div>
+          <div class="right">
+            <ons-button modifier="quiet" onclick="toggleTodo(${todo.id})">
+              <ons-icon icon="fa-${todo.completed ? 'undo' : 'check'}"></ons-icon>
+            </ons-button>
+            <ons-button modifier="quiet" onclick="removeTodo(${todo.id})">
+              <ons-icon icon="fa-trash"></ons-icon>
+            </ons-button>
+          </div>
+        `;
+        listEl.appendChild(listItem);
       });
     }
 
-    // ======== 5. 新規TODOを追加 ========
     const form = document.getElementById('todoForm');
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', (e) => {
       e.preventDefault();
       const input = document.getElementById('todoInput');
       const title = input.value.trim();
       if (!title) return;
-      await createTodo(title);
+
+      google.script.run.withSuccessHandler(() => {
+        fetchTodos();
+      }).createTodo(title);
+
       input.value = '';
     });
 
-    async function createTodo(title) {
-      try {
-        const res = await fetch(API_URL, {
-          method: 'POST',
-          mode: 'cors', // CORSを有効
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'create', title })
-        });
-        const data = await res.json();
-        if (data.success) {
-          fetchTodos(); // 再度取得して画面を更新
-        } else {
-          alert('Failed to create TODO');
-        }
-      } catch (err) {
-        console.error(err);
-        alert('Error while creating TODO');
-      }
+    function toggleTodo(id) {
+      google.script.run.withSuccessHandler(() => {
+        fetchTodos();
+      }).toggleTodo(id);
     }
 
-    // ======== 6. TODOを更新（完了/未完了の切り替え） ========
-    async function updateTodo(id, completed) {
-      try {
-        const res = await fetch(API_URL, {
-          method: 'POST',
-          mode: 'cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'update', id, completed })
-        });
-        const data = await res.json();
-        if (data.success) {
-          fetchTodos();
-        } else {
-          alert('Failed to update TODO');
-        }
-      } catch (err) {
-        console.error(err);
-        alert('Error while updating TODO');
-      }
-    }
-
-    // ======== 7. TODOを削除 ========
-    async function deleteTodo(id) {
-      try {
-        const res = await fetch(API_URL, {
-          method: 'POST',
-          mode: 'cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'delete', id })
-        });
-        const data = await res.json();
-        if (data.success) {
-          fetchTodos();
-        } else {
-          alert('Failed to delete TODO');
-        }
-      } catch (err) {
-        console.error(err);
-        alert('Error while deleting TODO');
-      }
+    function removeTodo(id) {
+      google.script.run.withSuccessHandler(() => {
+        fetchTodos();
+      }).deleteTodo(id);
     }
   </script>
 </body>
