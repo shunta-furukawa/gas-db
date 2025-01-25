@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>My TODO App</title>
+  <style>
+    body { font-family: sans-serif; }
+    li.completed { text-decoration: line-through; color: #999; }
+    button { margin-left: 8px; }
+  </style>
+</head>
+<body>
+  <h1>TODO List</h1>
+  <form id="todoForm">
+    <input type="text" id="todoInput" placeholder="New task..." required/>
+    <button type="submit">Add</button>
+  </form>
+
+  <ul id="todoList"></ul>
+
+  <script>
+    // ======== 1. APIのURLを設定（GASデプロイ時のWebアプリURL） ========
+    const API_URL = "https://script.google.com/macros/s/XXX/exec";
+    
+    // ======== 2. 初期表示でTODOを全件取得 ========
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchTodos();
+    });
+
+    // ======== 3. TODOリストを取得して描画 ========
+    async function fetchTodos() {
+      try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        renderTodos(data.todos || []);
+      } catch (err) {
+        console.error(err);
+        alert("Failed to fetch TODOs");
+      }
+    }
+
+    // ======== 4. TODOリストを画面に描画 ========
+    function renderTodos(todos) {
+      const listEl = document.getElementById('todoList');
+      listEl.innerHTML = '';
+      todos.forEach(todo => {
+        const li = document.createElement('li');
+        li.textContent = todo.title;
+        if (String(todo.completed) === 'true') {
+          li.classList.add('completed');
+        }
+
+        // 完了/未完了トグルボタン
+        const toggleBtn = document.createElement('button');
+        toggleBtn.textContent = todo.completed ? 'Uncheck' : 'Check';
+        toggleBtn.addEventListener('click', async () => {
+          await updateTodo(todo.id, !todo.completed);
+        });
+
+        // 削除ボタン
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.addEventListener('click', async () => {
+          await deleteTodo(todo.id);
+        });
+
+        li.appendChild(toggleBtn);
+        li.appendChild(deleteBtn);
+        listEl.appendChild(li);
+      });
+    }
+
+    // ======== 5. 新規TODOを追加 ========
+    const form = document.getElementById('todoForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = document.getElementById('todoInput');
+      const title = input.value.trim();
+      if (!title) return;
+      await createTodo(title);
+      input.value = '';
+    });
+
+    async function createTodo(title) {
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'create', title })
+        });
+        const data = await res.json();
+        if (data.success) {
+          // 再度取得して画面を更新
+          fetchTodos();
+        } else {
+          alert('Failed to create TODO');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Error while creating TODO');
+      }
+    }
+
+    // ======== 6. TODOを更新（完了/未完了の切り替え） ========
+    async function updateTodo(id, completed) {
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'update', id, completed })
+        });
+        const data = await res.json();
+        if (data.success) {
+          fetchTodos();
+        } else {
+          alert('Failed to update TODO');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Error while updating TODO');
+      }
+    }
+
+    // ======== 7. TODOを削除 ========
+    async function deleteTodo(id) {
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'delete', id })
+        });
+        const data = await res.json();
+        if (data.success) {
+          fetchTodos();
+        } else {
+          alert('Failed to delete TODO');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Error while deleting TODO');
+      }
+    }
+  </script>
+</body>
+</html>
